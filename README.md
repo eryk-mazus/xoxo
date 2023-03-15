@@ -1,11 +1,16 @@
-# 😻 xoxo.ai
-tiny, exploitable assistant that can use tools
+# 😽 xoxo.ai
+
+tiny, exploitable chatbot that can use tools
 
 something between chatgpt and perplexity.ai with a toolformer flavour
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/eryk-mazus/xoxo/main/docs/example.png">
+</p>
+
 ## Setup
 
-1. Add OpenAI API and Bing Web Search API keys to environment variables:
+1. Add OpenAI API and Bing Web Search API keys to the environment variables:
 ```
 set OPENAI_API_KEY=XXX
 set BING_SUBSCRIPTION_KEY=XXX
