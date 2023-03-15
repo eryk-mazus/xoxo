@@ -2,6 +2,7 @@ from typing import List
 import sys
 import os
 import re
+import argparse
 import colorama
 from colorama import Fore, Style
 from datetime import datetime
@@ -119,13 +120,15 @@ def buffer_2_string(buffer: List[Message]) -> str:
     return output_string
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--user_name", type=str, required=True)
+    args = parser.parse_args()
+
     buffer = []
-    # todo:
-    # generate the introduction
-    introduction_str = "Hi Eric! 🤗 How can I help you today?"
+    introduction_str = f"Hi {args.user_name}! 🤗 How can I help you today?"
 
     buffer.append(
-        Message("XOXO", introduction_str.replace("Eric!", "Eric (user name)"))
+        Message("XOXO", introduction_str.replace(f"{args.user_name}!", f"{args.user_name} (user name)"))
     )
     print(format_xoxo_msg(introduction_str))
 
