@@ -1,4 +1,4 @@
-# 😽 xoxo.ai
+# xoxo.ai
 
 tiny, exploitable chatbot that can use tools
 
