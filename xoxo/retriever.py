@@ -74,5 +74,5 @@ class Retriever:
 
     @staticmethod
     def format_boring_msg(s: str) -> str:
-        prefix = f"{Back.WHITE}{Fore.BLUE}Response:{Style.RESET_ALL}"
-        return prefix + "\n" + f"{Fore.WHITE}{s}{Style.RESET_ALL}"
+        prefix = f"{Fore.CYAN} ~~ response:{Style.RESET_ALL}"
+        return prefix + "\n" + f"{Fore.CYAN}{s}{Style.RESET_ALL}" + "\n" + f"{Fore.CYAN} {'~'*33}"
