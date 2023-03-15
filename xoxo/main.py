@@ -198,5 +198,5 @@ if __name__ == "__main__":
                 continue
 
     except KeyboardInterrupt:
-        print(format_xoxo_msg("Goodbye!"))
+        print("\n" + format_xoxo_msg("Goodbye!"))
         exit(0)
