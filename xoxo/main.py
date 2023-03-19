@@ -1,13 +1,16 @@
-from typing import List
 import sys
 import os
 import re
 import argparse
 import colorama
+
+import openai
+
 from colorama import Fore, Style
 from datetime import datetime
-import openai
-from xoxo import Retriever, Message
+from typing import List
+
+from xoxo import retriever, models
 
 colorama.init()
 
@@ -106,7 +109,7 @@ def get_xoxo_command(history: str) -> str:
 
     return response.choices[0].text
 
-def buffer_2_string(buffer: List[Message]) -> str:   
+def buffer_2_string(buffer: List[models.Message]) -> str:   
     output_string = ""
     for msg in buffer:
         if msg.author == "USER":
@@ -128,12 +131,12 @@ if __name__ == "__main__":
     introduction_str = f"Hi {args.user_name}! 🤗 How can I help you today?"
 
     buffer.append(
-        Message("XOXO", introduction_str.replace(f"{args.user_name}!", f"{args.user_name} (user name)"))
+        models.Message("XOXO", introduction_str.replace(f"{args.user_name}!", f"{args.user_name} (user name)"))
     )
     print(format_xoxo_msg(introduction_str))
 
     user_input = input(format_user_msg(""))
-    buffer.append(Message("USER", user_input))
+    buffer.append(models.Message("USER", user_input))
 
     try:
         while True:
@@ -146,20 +149,20 @@ if __name__ == "__main__":
                 cmd = cmd[:-1]
 
             if cmd == "MESSAGE":
-                buffer.append(Message("XOXO", msg))
+                buffer.append(models.Message("XOXO", msg))
                 print(format_xoxo_msg(msg))
 
                 user_input = input(format_user_msg(""))
-                buffer.append(Message("USER", user_input))
+                buffer.append(models.Message("USER", user_input))
                 continue
             elif cmd == "THINK":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 continue
             elif cmd == "SEARCH":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
-                r = Retriever()
+                r = retriever.Retriever()
                 boring_response = r.trigger(msg)
 
                 buffer.append(boring_response)
@@ -168,21 +171,21 @@ if __name__ == "__main__":
                     print(format_xoxo_msg(boring_response.content))
 
                     user_input = input(format_user_msg(""))
-                    buffer.append(Message("USER", user_input))
+                    buffer.append(models.Message("USER", user_input))
                 else:
-                    print(Retriever.format_boring_msg(boring_response.content))
+                    print(retriever.Retriever.format_boring_msg(boring_response.content))
                 continue
             elif cmd == "CALENDAR":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
 
                 out = calendar()
 
-                buffer.append(Message("RESULT", out))
+                buffer.append(models.Message("RESULT", out))
                 print(format_xoxo_state("result" + ": " + out))
                 continue
             elif cmd == "CALCULATE":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 try:
                     out = str(simple_math_eval(msg))
@@ -190,7 +193,7 @@ if __name__ == "__main__":
                     out = f"failed to calculate {msg}"
                     print(" >> " + out)
 
-                buffer.append(Message("RESULT", out))
+                buffer.append(models.Message("RESULT", out))
                 print(format_xoxo_state("result" + ": " + out))
                 continue
             else:

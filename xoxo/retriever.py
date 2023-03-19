@@ -1,10 +1,13 @@
-from typing import List
-import  os
+import os
 import json
 import requests
 import openai
+
+from typing import List
+
 from colorama import Fore, Back, Style
-from xoxo import Message, SearchResult
+
+from xoxo import models
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -34,7 +37,7 @@ class Retriever:
         passages = "\n\n".join([x.get_passage() for x in search_results[: self.k]])
         request, state = (user_request, "XOXO") if user_request else (query, "RESULT")
         summary = self.summarize(request, passages)
-        return Message(state, summary)
+        return models.Message(state, summary)
 
     def search(self, query: str) -> List[SearchResult]:
         mkt = "en-US"
@@ -53,7 +56,7 @@ class Retriever:
             json_response = response.json()
 
             return [
-                SearchResult(x["name"], x["url"], x["snippet"])
+                models.SearchResult(x["name"], x["url"], x["snippet"])
                 for x in json_response["webPages"]["value"]
             ]
         except Exception as e:
