@@ -29,6 +29,12 @@ poetry install
 poetry run python ./xoxo/main.py --user_name YOUR_NAME
 ```
 
+## Run with docker-compose
+1. git clone the project
+2. copy .env.example from docker to the root of the project and name it .env
+3. put your values into the respective fields in .env file
+4. run the project from the root of the file using `docker-compose -f docker/docker-compose.yml build && docker-compose -f docker/docker-compose.yml run xoxo`
+
 ## Ideas for near-term development:
 - flushing conversation history when the max context length is close to being overflown
 - add the local memory ~ cashing and retrieving information from previous conversations
