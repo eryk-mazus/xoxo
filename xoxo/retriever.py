@@ -9,47 +9,46 @@ from colorama import Fore, Back, Style
 
 from xoxo import models
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
-
-# Bing web search API credentials
-subscription_key = os.environ["BING_SUBSCRIPTION_KEY"]
-endpoint = "https://api.bing.microsoft.com/v7.0/search"
-
-summary_prompt = """
-You are given a query and retrieved search results. Summarize the given search results keeping the user request in mind. 
-If you enumerate things, list them from bullets in new lines with urls in parethesies so that the user could click on them.
-
-RESULTS:
-{results}
-
-QUERY: {query}
-
-ANSWER:
-
-"""
-
 class Retriever:
-    def __init__(self, k: int = 3) -> None:
+    def __init__(
+            self, 
+            *,
+            openai_api_key: str,
+            bing_api_key: str,
+            summary_prompt: str,
+            bing_api_endpoint="https://api.bing.microsoft.com/v7.0/search"
+            k: int = 3
+            ):
+
         self.k = k
+        self._openai_api_key = openai_api_key
+        self._bing_api_key = bing_api_key
+        self._bing_api_endpoint = bing_api_endpoint
+        self._summary_prompt = summary_prompt
 
     def trigger(self, query: str, user_request: str = None):
         search_results = self.search(query)
         passages = "\n\n".join([x.get_passage() for x in search_results[: self.k]])
         request, state = (user_request, "XOXO") if user_request else (query, "RESULT")
         summary = self.summarize(request, passages)
+
         return models.Message(state, summary)
 
     def search(self, query: str) -> List[SearchResult]:
         mkt = "en-US"
         params = {"q": query, "mkt": mkt}
-        headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+        headers = {"Ocp-Apim-Subscription-Key": self._bing_api_key}
 
         # todo:
         # check if there is a way to limit the number of search results
 
         # call to the search api:
         try:
-            response = requests.get(endpoint, headers=headers, params=params)
+            response = requests.get(
+                    self._bing_api_endpoint, 
+                    headers=headers, 
+                    params=params
+                    )
             response.raise_for_status()
 
             _ = response.headers
@@ -66,7 +65,7 @@ class Retriever:
     def summarize(self, query: str, context: str) -> str:
         response = openai.Completion.create(
             model="text-davinci-003",
-            prompt=summary_prompt.format(query=query, results=context),
+            prompt=self._summary_prompt.format(query=query, results=context),
             temperature=0.5,
             max_tokens=350,
             top_p=1,

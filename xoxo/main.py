@@ -10,11 +10,9 @@ from colorama import Fore, Style
 from datetime import datetime
 from typing import List
 
-from xoxo import retriever, models
+from xoxo import retriever, models, config
 
 colorama.init()
-
-openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
 _re_simple_eval = re.compile(rb"d([\x00-\xFF]+)S\x00")
@@ -137,7 +135,19 @@ if __name__ == "__main__":
 
     user_input = input(format_user_msg(""))
     buffer.append(models.Message("USER", user_input))
+    
+    openai_api_key = config.OPENAI_API_KEY
+    bing_api_key = config.BING_SUBSCRIPTION_KEY
+    bing_api_endpoint = config.BING_ENDPOINT_URL
+    summary_prompt = config.XOXO_SUMMARY_PROMPT
 
+    retriver = retriever.Retriever(
+            openai_api_key=openai_api_key,
+            bing_api_key=bing_api_key,
+            summary_prompt=summary_prompt,
+            bing_api_endpoint=bing_api_endpoint,
+            k=3
+            )
     try:
         while True:
             buffer_string = buffer_2_string(buffer)
@@ -162,7 +172,6 @@ if __name__ == "__main__":
             elif cmd == "SEARCH":
                 buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
-                r = retriever.Retriever()
                 boring_response = r.trigger(msg)
 
                 buffer.append(boring_response)
