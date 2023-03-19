@@ -5,6 +5,7 @@ class Message:
     author: str
     content: str
 
+
 @dataclass
 class SearchResult:
     name: str
@@ -13,3 +14,4 @@ class SearchResult:
 
     def get_passage(self) -> str:
         return self.url + "\n" + self.snippet
+

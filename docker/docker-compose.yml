@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+
+  xoxo:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    image: xoxo:latest
+    entrypoint: bash ./entrypoint.sh
+    env_file:
+      - ../.env
+    stdin_open: true 
+    tty: true
+

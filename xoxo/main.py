@@ -1,40 +1,30 @@
-from typing import List
 import sys
 import os
 import re
 import argparse
+import logging
+
 import colorama
+import openai
+import asteval
+
 from colorama import Fore, Style
 from datetime import datetime
-import openai
-from xoxo import Retriever, Message
+from typing import List
+
+from xoxo import retriever, models, config, search
+
+logging.basicConfig(level=logging.DEBUG, encoding='utf-8')
+logger = logging.getLogger("main")
 
 colorama.init()
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
-
-# https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
-_re_simple_eval = re.compile(rb"d([\x00-\xFF]+)S\x00")
 
 def calendar() -> str:
     """ Returns a string representing current date and time """
     now = datetime.now()  # current date and time
     date_time_str = now.strftime("today's date: %A %d.%m.%Y, time right now: %I:%M %p")
     return date_time_str
-
-def simple_math_eval(expr: str) -> str:
-    """ Attempts to evaluate the math expression passed as string """
-    try:
-        c = compile(expr, "userinput", "eval")
-    except SyntaxError:
-        raise ValueError(f"Malformed expression: {expr}")
-    m = _re_simple_eval.fullmatch(c.co_code)
-    if not m:
-        raise ValueError(f"Not a simple algebraic expression: {expr}")
-    try:
-        return c.co_consts[int.from_bytes(m.group(1), sys.byteorder)]
-    except IndexError:
-        raise ValueError(f"Expression not evaluated as constant: {expr}")
 
 xoxo_prompt = """
 You are the brain of general purpose assistant, named xoxo.ai. Your goal is to have a nice conversation with the user. 
@@ -106,7 +96,7 @@ def get_xoxo_command(history: str) -> str:
 
     return response.choices[0].text
 
-def buffer_2_string(buffer: List[Message]) -> str:   
+def buffer_2_string(buffer: List[models.Message]) -> str:   
     output_string = ""
     for msg in buffer:
         if msg.author == "USER":
@@ -121,22 +111,37 @@ def buffer_2_string(buffer: List[Message]) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--user_name", type=str, required=True)
+    parser.add_argument("--user_name", type=str, required=False, default="noname")
     args = parser.parse_args()
 
     buffer = []
     introduction_str = f"Hi {args.user_name}! 🤗 How can I help you today?"
 
     buffer.append(
-        Message("XOXO", introduction_str.replace(f"{args.user_name}!", f"{args.user_name} (user name)"))
+        models.Message("XOXO", introduction_str.replace(f"{args.user_name}!", f"{args.user_name} (user name)"))
     )
     print(format_xoxo_msg(introduction_str))
 
-    user_input = input(format_user_msg(""))
-    buffer.append(Message("USER", user_input))
+    
+    openai_api_key = config.OPENAI_API_KEY
+    bing_api_key = config.BING_SUBSCRIPTION_KEY
+    summary_prompt = config.XOXO_SUMMARY_PROMPT
 
+    bing_search = search.BingSearchService(bing_api_key=bing_api_key)
+    ddg_search = search.DuckDuckGoSearchService()
+
+    retriever_instance = retriever.Retriever(
+            search_service=ddg_search,
+            openai_api_key=openai_api_key,
+            summary_prompt=summary_prompt,
+            k=3
+            )
+    a = asteval.Interpreter()
+
+    logger.debug(buffer)
     try:
-        while True:
+        while user_input:=input(format_user_msg("")):
+            buffer.append(models.Message("USER", user_input))
             buffer_string = buffer_2_string(buffer)
             xoxo_command = get_xoxo_command(buffer_string)
 
@@ -145,22 +150,25 @@ if __name__ == "__main__":
             if cmd[-1] == ":":
                 cmd = cmd[:-1]
 
+            logger.debug(buffer)
+            logger.debug(cmd)
             if cmd == "MESSAGE":
-                buffer.append(Message("XOXO", msg))
+                buffer.append(models.Message("XOXO", msg))
                 print(format_xoxo_msg(msg))
 
                 user_input = input(format_user_msg(""))
-                buffer.append(Message("USER", user_input))
+                buffer.append(models.Message("USER", user_input))
                 continue
+
             elif cmd == "THINK":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 continue
+
             elif cmd == "SEARCH":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
-                r = Retriever()
-                boring_response = r.trigger(msg)
+                boring_response = retriever_instance.trigger(msg)
 
                 buffer.append(boring_response)
 
@@ -168,31 +176,34 @@ if __name__ == "__main__":
                     print(format_xoxo_msg(boring_response.content))
 
                     user_input = input(format_user_msg(""))
-                    buffer.append(Message("USER", user_input))
+                    buffer.append(models.Message("USER", user_input))
                 else:
-                    print(Retriever.format_boring_msg(boring_response.content))
+                    print(retriever.Retriever.format_boring_msg(boring_response.content))
                 continue
+
             elif cmd == "CALENDAR":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
 
                 out = calendar()
 
-                buffer.append(Message("RESULT", out))
+                buffer.append(models.Message("RESULT", out))
                 print(format_xoxo_state("result" + ": " + out))
                 continue
+
             elif cmd == "CALCULATE":
-                buffer.append(Message(cmd, msg))
+                buffer.append(models.Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 try:
-                    out = str(simple_math_eval(msg))
+                    out = str(a.eval(msg))
                 except:
                     out = f"failed to calculate {msg}"
                     print(" >> " + out)
 
-                buffer.append(Message("RESULT", out))
+                buffer.append(models.Message("RESULT", out))
                 print(format_xoxo_state("result" + ": " + out))
                 continue
+
             else:
                 print(f" >> command `{cmd}` is unknown")
                 continue
@@ -200,3 +211,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n" + format_xoxo_msg("Goodbye!"))
         exit(0)
+
