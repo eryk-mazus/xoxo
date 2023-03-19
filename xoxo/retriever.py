@@ -16,7 +16,7 @@ class Retriever:
             openai_api_key: str,
             bing_api_key: str,
             summary_prompt: str,
-            bing_api_endpoint="https://api.bing.microsoft.com/v7.0/search"
+            bing_api_endpoint="https://api.bing.microsoft.com/v7.0/search",
             k: int = 3
             ):
 
@@ -34,7 +34,7 @@ class Retriever:
 
         return models.Message(state, summary)
 
-    def search(self, query: str) -> List[SearchResult]:
+    def search(self, query: str) -> List[models.SearchResult]:
         mkt = "en-US"
         params = {"q": query, "mkt": mkt}
         headers = {"Ocp-Apim-Subscription-Key": self._bing_api_key}
@@ -78,3 +78,4 @@ class Retriever:
     def format_boring_msg(s: str) -> str:
         prefix = f"{Fore.CYAN} ~~ response:{Style.RESET_ALL}"
         return prefix + "\n" + f"{Fore.CYAN}{s}{Style.RESET_ALL}" + "\n" + f"{Fore.CYAN} {'~'*30}"
+

@@ -122,7 +122,7 @@ def buffer_2_string(buffer: List[models.Message]) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--user_name", type=str, required=True)
+    parser.add_argument("--user_name", type=str, required=False, default="noname")
     args = parser.parse_args()
 
     buffer = []
@@ -212,3 +212,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n" + format_xoxo_msg("Goodbye!"))
         exit(0)
+
