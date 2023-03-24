@@ -168,10 +168,17 @@ if __name__ == "__main__":
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 continue
             elif cmd == "SEARCH":
+                last_element_of_buffer = buffer[-1]
+                user_request = (
+                    last_element_of_buffer.content
+                    if last_element_of_buffer.author == "USER"
+                    else None
+                )
+
                 buffer.append(Message(cmd, msg))
                 print(format_xoxo_state(cmd.lower() + ": " + msg))
                 r = Retriever()
-                boring_response = r.trigger(msg)
+                boring_response = r.trigger(msg, user_request)
 
                 buffer.append(boring_response)
 

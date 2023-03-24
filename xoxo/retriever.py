@@ -32,7 +32,8 @@ class Retriever:
     def trigger(self, query: str, user_request: str = None):
         search_results = self.search(query)
         passages = "\n\n".join([x.get_passage() for x in search_results[: self.k]])
-        request, state = (user_request, "XOXO") if user_request else (query, "RESULT")
+        request, state = (query + "\nUSER QUESTION: " + user_request + "\n", "XOXO") if user_request else (query, "RESULT")
+
         summary = self.summarize(request, passages)
         return Message(state, summary)
 
