@@ -7,10 +7,6 @@ from xoxo import Message, SearchResult
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-# Bing web search API credentials
-subscription_key = os.environ["BING_SUBSCRIPTION_KEY"]
-endpoint = "https://api.bing.microsoft.com/v7.0/search"
-
 summary_prompt = """
 You are given a query and retrieved search results. Summarize the given search results keeping the user request in mind. 
 If you enumerate things, list them from bullets in new lines with urls in parethesies so that the user could click on them.

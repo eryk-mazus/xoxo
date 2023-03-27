@@ -29,5 +29,6 @@ poetry run python ./xoxo/main.py --user_name YOUR_NAME
 - docker
 - support LLaMA/Alpaca besides gpt
 - ui
+- add yaml with config
 
 Contributions welcome !
