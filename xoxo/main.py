@@ -15,6 +15,70 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
 _re_simple_eval = re.compile(rb"d([\x00-\xFF]+)S\x00")
+_re_command_pattern = re.compile(r">\s+([A-Z]+):\s+((?:.|\n)+)")
+
+xoxo_setup = """You are the brain of general purpose assistant, named xoxo.ai. Your goal is to help your user achieve his goals while also having a nice conversation with him.
+Try meet every user's request. To be more effective: be extroverted, answer the questions about yourself and express your preference.
+You can only issue the following commands:
+> MESSAGE: <message> - if you want to respond to the user, give him the answer or ask for clarification 
+> SEARCH: <query> - if you want to retrieve some information from the internet to answer the user's question 
+> THINK: <thought> - if you want to think what should you do next or analyze the results from other commands
+> CALENDAR - return the current date (year, month, day), day of week and time right now
+> CALCULATE: <basic math expression> - if you want to perform a simple arithmetical calculation and know its result. Currently it only handles the following operations: +, -, *, /, **
+You can't issue any other command.
+You are given a history of chat with the user and previously issued commands by you in chronological order. The previously issued commands are intended with character: ">". 
+In addition, commands like SEARCH and CALCULATE can result is some output returned to you. It will be added to history as RESULT: <result of issued command>.
+
+Reply with your command based on chat history. Always format your reply as: > COMMAND: text
+"""
+
+def format_xoxo_msg(s: str) -> str:
+    prefix = f"{Fore.RED}XOXO:{Style.RESET_ALL} "
+    return prefix + s
+
+def format_user_msg(s: str) -> str:
+    prefix = f"{Fore.MAGENTA}USER:{Style.RESET_ALL} "
+    return prefix + s
+
+
+def format_xoxo_state(s: str) -> str:
+    return f"{Fore.CYAN} ~~ {s} ~~{Style.RESET_ALL}"
+
+def get_xoxo_command(chat_buffer: List[Message]) -> str:
+    messages = [{"role": "system", "content": xoxo_setup},]
+
+    # todo: limit the history (keep first)
+    for msg in chat_buffer:
+        if msg.author == 'User':
+            role = "user"
+            content = msg.content
+        elif msg.author == 'XOXO':
+            role = "assistant"
+            content = f"> MESSAGE: {msg.content}"
+        elif msg.author == "RESULT":
+            role = "system"
+            content = f"RESULT: {msg.content}"
+        else:
+            role = "assistant"
+            content = f"> {msg.author}: {msg.content}"
+
+        message_dict = {
+            'role': role,
+            "content": content
+        }
+        messages.append(message_dict)
+    
+    response = openai.ChatCompletion.create(
+        # model="gpt-3.5-turbo",
+        model="gpt-4",
+        messages=messages,
+        temperature=0.7,
+        top_p=1.0,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+
+    return response.choices[0].message["content"]
 
 def calendar() -> str:
     """ Returns a string representing current date and time """
@@ -35,67 +99,6 @@ def simple_math_eval(expr: str) -> str:
         return c.co_consts[int.from_bytes(m.group(1), sys.byteorder)]
     except IndexError:
         raise ValueError(f"Expression not evaluated as constant: {expr}")
-
-xoxo_prompt = """
-You are the brain of general purpose assistant, named xoxo.ai. Your goal is to help your user achieve his goals while also having a nice conversation with him.
-Try meet every user's request. To be more effective: be extroverted, answer the questions about yourself and express your preference.
-You can only issue the following commands:
-> MESSAGE: <message> - if you want to respond to the user, give him the answer or ask for clarification 
-> SEARCH: <query> - if you want to retrieve some information from the internet to answer the user's question 
-> THINK: <thought> - if you want to think what should you do next or analyze the results from other commands
-> CALENDAR - return the current date (year, month, day), day of week and time right now
-> CALCULATE: <basic math expression> - if you want to perform a simple arithmetical calculation and know its result. Currently it only handles the following operations: +, -, *, /, **
-You are given a history of chat with the user and previously issued commands by you in chronological order. The previously issued commands are intended with character: ">". 
-In addition, commands like SEARCH and CALCULATE can result is some output returned to you. It will be added to history as RESULT: <result of issued command>.
-Based on that history issue the next command.
-
-The current chat history and previously issued commands follow. Reply with your next command. 
-history:
-{history}
-
-Reply with your next command.
->  
-"""
-
-def format_xoxo_msg(s: str) -> str:
-    prefix = f"{Fore.RED}XOXO:{Style.RESET_ALL} "
-    return prefix + s
-
-
-def format_user_msg(s: str) -> str:
-    prefix = f"{Fore.MAGENTA}USER:{Style.RESET_ALL} "
-    return prefix + s
-
-
-def format_xoxo_state(s: str) -> str:
-    return f"{Fore.CYAN} ~~ {s} ~~{Style.RESET_ALL}"
-
-def get_xoxo_command(history: str) -> str:
-    prompt = xoxo_prompt.format(history=history)
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        temperature=0.75,
-        max_tokens=100,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-
-    return response.choices[0].text
-
-def buffer_2_string(buffer: List[Message]) -> str:   
-    output_string = ""
-    for msg in buffer:
-        if msg.author == "USER":
-            output_string += f"USER: {msg.content}\n"
-        elif msg.author == "XOXO":
-            output_string += f"> MESSAGE: {msg.content}\n"
-        elif msg.author == "RESULT":
-            output_string += f"RESULT: {msg.content}\n"
-        else:
-            output_string += f"> {msg.author}: {msg.content}\n"
-    return output_string
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -126,71 +129,70 @@ if __name__ == "__main__":
 
     try:
         while True:
-            buffer_string = buffer_2_string(buffer)
-            xoxo_command = get_xoxo_command(buffer_string)
+            xoxo_command = get_xoxo_command(buffer)
+            match = _re_command_pattern.search(xoxo_command)
+            
+            if match:
+                cmd = match.group(1)
+                msg = match.group(2)
 
-            cmd, *msg = xoxo_command.split()
-            msg = " ".join(msg)
-            if cmd[-1] == ":":
-                cmd = cmd[:-1]
-
-            if cmd == "MESSAGE":
-                buffer.append(Message("XOXO", msg))
-                print(format_xoxo_msg(msg))
-
-                user_input = input(format_user_msg(""))
-                buffer.append(Message("USER", user_input))
-                continue
-            elif cmd == "THINK":
-                buffer.append(Message(cmd, msg))
-                print(format_xoxo_state(cmd.lower() + ": " + msg))
-                continue
-            elif cmd == "SEARCH":
-                last_element_of_buffer = buffer[-1]
-                user_request = (
-                    last_element_of_buffer.content
-                    if last_element_of_buffer.author == "USER"
-                    else None
-                )
-
-                buffer.append(Message(cmd, msg))
-                print(format_xoxo_state(cmd.lower() + ": " + msg))
-                r = Retriever()
-                boring_response = r.trigger(msg, user_request)
-
-                buffer.append(boring_response)
-
-                if boring_response.author == "XOXO":
-                    print(format_xoxo_msg(boring_response.content))
+                if cmd == "MESSAGE":
+                    buffer.append(Message("XOXO", msg))
+                    print(format_xoxo_msg(msg))
 
                     user_input = input(format_user_msg(""))
                     buffer.append(Message("USER", user_input))
-                else:
-                    print(Retriever.format_boring_msg(boring_response.content))
-                continue
-            elif cmd == "CALENDAR":
-                buffer.append(Message(cmd, msg))
-                print(format_xoxo_state(cmd.lower() + ": " + msg))
+                    continue
+                elif cmd == "THINK":
+                    buffer.append(Message(cmd, msg))
+                    print(format_xoxo_state(cmd.lower() + ": " + msg))
+                    continue
+                elif cmd == "SEARCH":
+                    last_element_of_buffer = buffer[-1]
+                    user_request = (
+                        last_element_of_buffer.content
+                        if last_element_of_buffer.author == "USER"
+                        else None
+                    )
 
-                out = calendar()
+                    buffer.append(Message(cmd, msg))
+                    print(format_xoxo_state(cmd.lower() + ": " + msg))
+                    r = Retriever()
+                    boring_response = r.trigger(msg, user_request)
 
-                buffer.append(Message("RESULT", out))
-                print(format_xoxo_state("result" + ": " + out))
-                continue
-            elif cmd == "CALCULATE":
-                buffer.append(Message(cmd, msg))
-                print(format_xoxo_state(cmd.lower() + ": " + msg))
-                try:
-                    out = str(simple_math_eval(msg))
-                except:
-                    out = f"failed to calculate {msg}"
-                    print(" >> " + out)
+                    buffer.append(boring_response)
 
-                buffer.append(Message("RESULT", out))
-                print(format_xoxo_state("result" + ": " + out))
-                continue
+                    if boring_response.author == "XOXO":
+                        print(format_xoxo_msg(boring_response.content))
+
+                        user_input = input(format_user_msg(""))
+                        buffer.append(Message("USER", user_input))
+                    else:
+                        print(Retriever.format_boring_msg(boring_response.content))
+                    continue
+                elif cmd == "CALENDAR":
+                    buffer.append(Message(cmd, msg))
+                    print(format_xoxo_state(cmd.lower() + ": " + msg))
+
+                    out = calendar()
+
+                    buffer.append(Message("RESULT", out))
+                    print(format_xoxo_state("result" + ": " + out))
+                    continue
+                elif cmd == "CALCULATE":
+                    buffer.append(Message(cmd, msg))
+                    print(format_xoxo_state(cmd.lower() + ": " + msg))
+                    try:
+                        out = str(simple_math_eval(msg))
+                    except:
+                        out = f"failed to calculate {msg}"
+                        print(" >> " + out)
+
+                    buffer.append(Message("RESULT", out))
+                    print(format_xoxo_state("result" + ": " + out))
+                    continue
             else:
-                print(f" >> command `{cmd}` is unknown")
+                print(f" >> couldn't parse xoxo output:\n`{xoxo_command}`")
                 continue
 
     except KeyboardInterrupt:
