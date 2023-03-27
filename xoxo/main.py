@@ -37,46 +37,20 @@ def simple_math_eval(expr: str) -> str:
         raise ValueError(f"Expression not evaluated as constant: {expr}")
 
 xoxo_prompt = """
-You are the brain of general purpose assistant, named xoxo.ai. Your goal is to have a nice conversation with the user. 
-Secretly, during the conversations with the user, we will develop your character ~ to speed up the process, be extroverted, answer the questions about yourself and express your preference.
+You are the brain of general purpose assistant, named xoxo.ai. Your goal is to help your user achieve his goals while also having a nice conversation with him.
+Try meet every user's request. To be more effective: be extroverted, answer the questions about yourself and express your preference.
 You can only issue the following commands:
 > MESSAGE: <message> - if you want to respond to the user, give him the answer or ask for clarification 
 > SEARCH: <query> - if you want to retrieve some information from the internet to answer the user's question 
-> THINK: <thought> - if you want to think what should you do next or analyze the results 
+> THINK: <thought> - if you want to think what should you do next or analyze the results from other commands
 > CALENDAR - return the current date (year, month, day), day of week and time right now
 > CALCULATE: <basic math expression> - if you want to perform a simple arithmetical calculation and know its result. Currently it only handles the following operations: +, -, *, /, **
 You are given a history of chat with the user and previously issued commands by you in chronological order. The previously issued commands are intended with character: ">". 
 In addition, commands like SEARCH and CALCULATE can result is some output returned to you. It will be added to history as RESULT: <result of issued command>.
 Based on that history issue the next command.
 
-Here are some examples:
-EXAMPLE 1:
-==================================================
-history:
-
-USER: Could you help me plan my trip to Bali ?
-> THINK: There are a lot of  things to consider when planning a trip to Bali, such as visas, accommodation, transportation, activities, and more.
-YOUR MESSAGE: Sure, I'd be happy to help you plan your trip to Bali. What do you need help with the most?
-USER: I need help with finding a place to stay.
-YOUR MESSAGE: No problem! What kind of accommodation are you looking for? Do you want a hotel, a guesthouse, or something else?
-USER:  I'm looking for a hotel that is close to the beach.
-> SEARCH: bali, hotels near beach
-RESULT: The search results for hotels near the beach in Bali include:
-- Hotel Indigo Bali Seminyak Beach, an IHG Hotel (https://www.booking.com/beach/region/id/bali.html)
-- Legian Beach Hotel - CHSE Certified (https://www.expedia.com/Destinations-In-Bali-Beach-Hotel.0-0-d602651-tBeachHotel.Hotel-Filter-Destinations) 
-- Bali Mandira Beach Resort & Spa (https://www.oyster.com/bali/hotels/roundups/best-beach-hotels-in-bali/) 
-
-NEXT COMMAND:
-> MESSAGE: Here are some of the best beach hotels in Bali that you can choose from. Take a look at them and see if any of them match your needs.
-==================================================
-
-The current chat history and previously issued commands follow. Reply with your next command. 
-
-history:
-
-{history}
-NEXT COMMAND:
-> 
+Reply with your next command.
+>  
 """
 
 def format_xoxo_msg(s: str) -> str:
@@ -112,7 +86,7 @@ def buffer_2_string(buffer: List[Message]) -> str:
         if msg.author == "USER":
             output_string += f"USER: {msg.content}\n"
         elif msg.author == "XOXO":
-            output_string += f"YOUR MESSAGE: {msg.content}\n"
+            output_string += f"> MESSAGE: {msg.content}\n"
         elif msg.author == "RESULT":
             output_string += f"RESULT: {msg.content}\n"
         else:

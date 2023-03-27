@@ -7,9 +7,9 @@ class Message:
 
 @dataclass
 class SearchResult:
-    name: str
+    title: str
     url: str
     snippet: str
 
     def get_passage(self) -> str:
-        return self.url + "\n" + self.snippet
+        return "url: " + self.url + "\n" + self.snippet
