@@ -1,9 +1,8 @@
 from typing import List
-import  os
-import json
-import requests
+import os
+from duckduckgo_search import ddg
 import openai
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from xoxo import Message, SearchResult
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -35,28 +34,18 @@ class Retriever:
         request, state = (query + "\nUSER QUESTION: " + user_request + "\n", "XOXO") if user_request else (query, "RESULT")
 
         summary = self.summarize(request, passages)
+        print(self.format_boring_msg(summary))
+
         return Message(state, summary)
 
     def search(self, query: str) -> List[SearchResult]:
-        mkt = "en-US"
-        params = {"q": query, "mkt": mkt}
-        headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-
-        # todo:
-        # check if there is a way to limit the number of search results
-
-        # call to the search api:
+        # todo: import region from config
         try:
-            response = requests.get(endpoint, headers=headers, params=params)
-            response.raise_for_status()
-
-            _ = response.headers
-            json_response = response.json()
-
+            response = ddg(query, region="us-en", safesearch=False, max_results=self.k)
             return [
-                SearchResult(x["name"], x["url"], x["snippet"])
-                for x in json_response["webPages"]["value"]
+                SearchResult(x["title"], x["href"], x["body"]) for x in response
             ]
+
         except Exception as e:
             print(e)
             return []
