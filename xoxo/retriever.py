@@ -28,10 +28,7 @@ class Retriever:
         search_results = self.search(query)
         passages = "\n\n".join([x.get_passage() for x in search_results[: self.k]])
         request, state = (query + "\nUSER QUESTION: " + user_request + "\n", "XOXO") if user_request else (query, "RESULT")
-
         summary = self.summarize(request, passages)
-        print(self.format_boring_msg(summary))
-
         return Message(state, summary)
 
     def search(self, query: str) -> List[SearchResult]:
