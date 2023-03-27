@@ -49,6 +49,10 @@ You are given a history of chat with the user and previously issued commands by 
 In addition, commands like SEARCH and CALCULATE can result is some output returned to you. It will be added to history as RESULT: <result of issued command>.
 Based on that history issue the next command.
 
+The current chat history and previously issued commands follow. Reply with your next command. 
+history:
+{history}
+
 Reply with your next command.
 >  
 """
