@@ -2,11 +2,11 @@
 
 tiny, exploitable chatbot that can use tools
 
-something between chatgpt and perplexity.ai with a toolformer flavour, but in your terminal
+something between chatgpt and perplexity.ai with a toolformer flavour, but in your terminal 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/eryk-mazus/xoxo/main/docs/example.png">
-</p>
+demo:
+
+https://user-images.githubusercontent.com/21311210/228291524-c5ba05bf-1468-40f6-af51-be73c11fe445.mp4
 
 ## Setup
 
