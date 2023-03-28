@@ -6,7 +6,7 @@ something between chatgpt and perplexity.ai with a toolformer flavour, but in yo
 
 demo:
 
-https://user-images.githubusercontent.com/21311210/228291524-c5ba05bf-1468-40f6-af51-be73c11fe445.mp4
+https://user-images.githubusercontent.com/21311210/228292074-8fecc175-a5b6-4c92-898a-10efcc6a4c1e.mp4
 
 ## Setup
 
