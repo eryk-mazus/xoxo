@@ -15,7 +15,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
 _re_simple_eval = re.compile(rb"d([\x00-\xFF]+)S\x00")
-_re_command_pattern = re.compile(r">\s+([A-Z]+):\s+((?:.|\n)+)")
+_re_command_pattern = re.compile(r">\s+([A-Z]+)(?::\s+((?:.|\n)+))?")
 
 xoxo_setup = """You are the brain of general purpose assistant, named xoxo.ai. Your goal is to help your user achieve his goals while also having a nice conversation with him.
 Try meet every user's request. To be more effective: be extroverted, answer the questions about yourself and express your preference.
@@ -177,8 +177,8 @@ if __name__ == "__main__":
                         print(Retriever.format_boring_msg(boring_response.content))
                     continue
                 elif cmd == "CALENDAR":
-                    buffer.append(Message(cmd, msg))
-                    print(format_xoxo_state(cmd.lower() + ": " + msg))
+                    buffer.append(Message(cmd, ""))
+                    print(format_xoxo_state(cmd.lower() + ":"))
 
                     out = calendar()
 
