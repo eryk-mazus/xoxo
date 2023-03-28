@@ -106,7 +106,7 @@ def simple_math_eval(expr: str) -> str:
     except IndexError:
         raise ValueError(f"Expression not evaluated as constant: {expr}")
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--user_name", type=str, required=True)
     args = parser.parse_args()
@@ -204,3 +204,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n" + format_xoxo_msg("Goodbye!"))
         exit(0)
+
+
+if __name__ == "__main__":
+    main()

@@ -16,3 +16,6 @@ duckduckgo-search = "^2.8.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+xoxo = "xoxo.__main__:main"
