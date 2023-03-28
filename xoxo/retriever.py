@@ -34,7 +34,7 @@ class Retriever:
     def search(self, query: str) -> List[SearchResult]:
         # todo: import region from config
         try:
-            response = ddg(query, region="us-en", safesearch=False, max_results=self.k)
+            response = ddg(query, region="us-en", safesearch="off", max_results=self.k)
             return [
                 SearchResult(x["title"], x["href"], x["body"]) for x in response
             ]

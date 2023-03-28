@@ -34,7 +34,7 @@ Reply with your command based on chat history. Always format your reply as: > CO
 
 def format_xoxo_msg(s: str) -> str:
     prefix = f"{Fore.RED}XOXO:{Style.RESET_ALL} "
-    matches = re.findall(r"\`\`\`((?:.|\n)+)\`\`\`", s, re.DOTALL)
+    matches = re.findall(r"\`\`\`((?:.|\n)+?)\`\`\`", s, re.DOTALL)
     
     for match in matches:
         colored_match = f"{Fore.GREEN}{match}{Style.RESET_ALL}"
