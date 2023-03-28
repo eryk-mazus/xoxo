@@ -8,7 +8,7 @@ demo:
 
 https://user-images.githubusercontent.com/21311210/228292074-8fecc175-a5b6-4c92-898a-10efcc6a4c1e.mp4
 
-## Setup (todo: easier installation thorugh pip)
+## Setup
 
 1. Add OpenAI API key to the environment variables:
 ```
