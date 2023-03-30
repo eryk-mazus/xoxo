@@ -6,7 +6,7 @@ something between chatgpt and perplexity.ai with a toolformer flavour, but in yo
 
 demo:
 
-https://user-images.githubusercontent.com/21311210/228292074-8fecc175-a5b6-4c92-898a-10efcc6a4c1e.mp4
+https://user-images.githubusercontent.com/21311210/228931234-1a2abb4d-53a1-414b-8455-13152261dc6e.mp4
 
 ## Setup
 
@@ -15,21 +15,16 @@ https://user-images.githubusercontent.com/21311210/228292074-8fecc175-a5b6-4c92-
 set OPENAI_API_KEY=XXX
 ```
 
-2. Installation 
+2. Install and Run 
 ```
-poetry install 
-```
-
-3. Run
-```
+poetry install
 poetry run python ./xoxo/main.py --user_name YOUR_NAME
 ```
 
 ## Ideas for near-term development:
-- format code output, format search output
 - docker
-- support LLaMA/Alpaca besides gpt
-- ui
+- support llama/alpaca.cpp
 - add yaml with config
+- publish to pypi
 
 Contributions welcome !
