@@ -42,6 +42,23 @@ def format_xoxo_msg(s: str) -> str:
 
     return prefix + s
 
+def format_xoxo_summary_results(s: str) -> str:
+    prefix = f"{Fore.RED}XOXO:{Style.RESET_ALL} "
+    
+    url_regex = r'\[url:\s(https?://[^\s]+)\]'
+    urls = re.findall(url_regex, s)
+    url_references = {url: f'[{index + 1}]' for index, url in enumerate(urls)}
+
+    def replace_url(match):
+        url = match.group(1)
+        return url_references[url]
+    
+    text_with_references = re.sub(url_regex, replace_url, s)
+    references = "\n\n----\n" + "\n".join([f"[{index + 1}] {url}" for index, url in enumerate(urls)])
+    
+    return prefix + text_with_references + references
+
+
 def format_user_msg(s: str) -> str:
     prefix = f"{Fore.MAGENTA}USER:{Style.RESET_ALL} "
     return prefix + s
@@ -169,12 +186,12 @@ def main():
                     buffer.append(boring_response)
 
                     if boring_response.author == "XOXO":
-                        print(format_xoxo_msg(boring_response.content))
+                        print(format_xoxo_summary_results(boring_response.content))
 
                         user_input = input(format_user_msg(""))
                         buffer.append(Message("USER", user_input))
                     else:
-                        print(Retriever.format_boring_msg(boring_response.content))
+                        print(Retriever.format_retriever_msg(boring_response.content))
                     continue
                 elif cmd == "CALENDAR":
                     buffer.append(Message(cmd, ""))

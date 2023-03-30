@@ -9,7 +9,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 summary_prompt = """
 You are given a query and retrieved search results. Summarize the given search results keeping the user request in mind. 
-If you enumerate things, list them from bullets in new lines with urls in parethesies so that the user could click on them.
+If you enumerate items, list them on new lines using bullets. Add the source urls in square brackets with the prefix 'url:', for example: [url: the actual url]
 
 RESULTS:
 {results}
