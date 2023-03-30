@@ -56,6 +56,6 @@ class Retriever:
         return response.choices[0].text.strip()
 
     @staticmethod
-    def format_boring_msg(s: str) -> str:
+    def format_retriever_msg(s: str) -> str:
         prefix = f"{Fore.CYAN} ~~ response:{Style.RESET_ALL}"
         return prefix + "\n" + f"{Fore.CYAN}{s}{Style.RESET_ALL}" + "\n" + f"{Fore.CYAN} {'~'*30}"
