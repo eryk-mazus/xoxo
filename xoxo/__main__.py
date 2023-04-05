@@ -7,11 +7,14 @@ import colorama
 from colorama import Fore, Style
 from datetime import datetime
 import openai
+import elevenlabslib as ell
 from xoxo import Retriever, Message
 
 colorama.init()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+ell_user = ell.ElevenLabsUser(os.environ["ELL_API_KEY"])
+ell_voice = ell_user.get_voices_by_name("Rachel")[0]
 
 # https://stackoverflow.com/questions/2371436/evaluating-a-mathematical-expression-in-a-string
 _re_simple_eval = re.compile(rb"d([\x00-\xFF]+)S\x00")
@@ -33,6 +36,8 @@ Reply with your command based on chat history. Always format your reply as: > CO
 """
 
 def format_xoxo_msg(s: str) -> str:
+    ell_voice.generate_and_play_audio(s, playInBackground=True)
+
     prefix = f"{Fore.RED}XOXO:{Style.RESET_ALL} "
     matches = re.findall(r"\`\`\`((?:.|\n)+?)\`\`\`", s, re.DOTALL)
     
@@ -54,6 +59,10 @@ def format_xoxo_summary_results(s: str) -> str:
         return url_references[url]
     
     text_with_references = re.sub(url_regex, replace_url, s)
+    text_without_references = re.sub(url_regex, "", s)
+
+    ell_voice.generate_and_play_audio(text_without_references, playInBackground=True)
+
     references = "\n\n----\n" + "\n".join([f"[{index + 1}] {url}" for index, url in enumerate(urls)])
     
     return prefix + text_with_references + references
@@ -162,6 +171,7 @@ def main():
                 if cmd == "MESSAGE":
                     buffer.append(Message("XOXO", msg))
                     print(format_xoxo_msg(msg))
+                    # ell_voice.generate_and_play_audio(msg, playInBackground=True)
 
                     user_input = input(format_user_msg(""))
                     buffer.append(Message("USER", user_input))
